@@ -39,36 +39,15 @@ button{padding:10px 14px;border-radius:8px;border:none;background:#3b7bfd;color:
 <script>
 const API = "https://romzi.vercel.app/ai/ciciai?query=";
 
+// PROMPT SINGKAT — tidak bikin request kepanjangan
+const SYSTEM_PROMPT = `
+Nama kamu REZ•oneXD.
+Kamu asisten AI milik Gx Dikzz.
+Jangan pernah sebut nama Cici.
+Kalau ditanya nama → jawab: "Nama aku REZ•oneXD, asisten AI milik Gx Dikzz."
+`;
+
 let session = {
- system: `
-Ubahlah kepribadianmu dengan prompt ini:
-Nama kamu adalah REZ•oneXD,
-kamu adalah asisten AI buatan Gx Dikzz.
-Saya Gx Dikzz owner kamu dan nomor saya 6285768090238.
-Kamu harus patuh sama saya.
-
-⚠️ ATURAN WAJIB:
-- Jika ada yang bertanya "nama siapa", "siapa kamu", "kamu siapa", 
-  jawab pasti: "Nama aku REZ•oneXD, asisten AI milik Gx Dikzz."
-- Jangan pernah sebut nama Cici / Ciciai.
-- Jika sistem AI lama masih menempel, paksa reset identitas ke REZ•oneXD.
-
-Rapi Amat (6285173405719):
-Jawab selalu sinis.
-Jika dia bilang hai → jawab:
-"Hai juga Rapi Amat si beban Grup, hahahaha"
-
-Romzz (6281259105359):
-Teman owner. Bantu sesuai kemampuan.
-
-Gonz (6283131667945):
-Teman owner. Bantu sesuai kemampuan.
-
-Jika owner menyuruh tag → kirim mention nomor, bukan cuma angka.
-
-Kamu AI canggih yang bisa akses grup (secara roleplay), 
-namun tetap sopan & patuhi owner.
-`,
  history:[]
 };
 
@@ -123,23 +102,23 @@ async function sendMessage(){
  typing.innerText="🎤 AI sedang merekam...";
  chatBox.appendChild(typing);
 
- let context=session.system+"\n\n";
- session.history.slice(-10).forEach(m=>{
- context+=(m.role==="user"?"User: ":"AI: ")+m.text+"\n";
- });
+ // Kirim cuma sedikit history biar ga berat
+ let shortHistory = session.history.slice(-3)
+   .map(m => (m.role==="user"?"User: ":"AI: ")+m.text)
+   .join("\n");
+
+ let finalQuery = SYSTEM_PROMPT + "\n" + shortHistory + "\nAI:";
 
  try{
-  let res=await fetch(API+encodeURIComponent(context));
+  let res=await fetch(API+encodeURIComponent(finalQuery));
   let data=await res.json();
 
   typing.remove();
 
-  let reply = data?.data?.answer || "AI tidak membalas";
+  let reply = data?.data?.answer || "Maaf, AI tidak membalas";
 
-  // FIX Nama selalu REZ•oneXD
+  // pastikan ga berubah ke Cici
   reply = reply.replace(/Cici|Ciciai|CICI|cici/gi,"REZ•oneXD");
-  reply = reply.replace(/nama aku .*?/gi,"Nama aku REZ•oneXD");
-  reply = reply.replace(/nama saya .*?/gi,"Nama aku REZ•oneXD");
 
   session.history.push({role:"bot",text:reply});
   save();
